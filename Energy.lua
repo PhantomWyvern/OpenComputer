@@ -1,4 +1,4 @@
---1.0.2
+--1.0.3
 local component = require("component")
 --for address, kind in component.list("induction_matrix") do
     --print("found: ", address, kind)
@@ -30,6 +30,22 @@ function formatEnergy(energy)
     return formatted .. suffixes[suffixIndex] .. "J"
 end
 
+function formatTime(seconds)
+    local suffixes = {"s", "m", "h", "d", "w"}
+    local divisors = {60, 60, 24, 7}
+    local suffixIndex = 1
+    if seconds <= 1 then return "0s" end
+    while divisors[suffixIndex] and seconds >= divisors[suffixIndex] do
+        seconds = seconds / divisors[suffixIndex]
+        suffixIndex = suffixIndex + 1
+    end
+    local formatted = string.format("%.1f", seconds)
+    if string.sub(formatted, -2) == ".0" then
+        formatted = string.sub(formatted, 1, -3)
+    end
+    return formatted .. suffixes[suffixIndex]
+end
+
 print("Stored: ", formatEnergy(stored))
 print("Maximum: ", formatEnergy(maximum))
 --print("Input: ", formatEnergy(input))
@@ -41,8 +57,8 @@ if maximum > 0 then
     space_left = (maximum - stored)
     profit = (input - output)
     if profit > 0 then
-        print("Time to full: ", string.format("%.2f", (space_left / profit) / 20) .. " seconds")
+        print("Time to full: ", formatTime((space_left / profit) / 20))
     else
-        print("Time to empty: ", string.format("%.2f", (stored / math.abs(profit)) / 20) .. " seconds")
+        print("Time to empty: ", formatTime((stored / math.abs(profit)) / 20))
     end
 end

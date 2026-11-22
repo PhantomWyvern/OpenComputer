@@ -2,6 +2,7 @@
 local shell = require("shell")
 local fs = require("filesystem")
 local computer = require("computer")
+local event = require("event")
 
 local temp_path = shell.resolve("temp.lua")
 local temp2_path = shell.resolve("temp2.lua")
@@ -90,17 +91,30 @@ local function replace_current_file()
     computer.shutdown(true)
 end
 
-local thread = require("thread")
-if fs.exists(temp_path) then
-    thread.create(function()
-        local ok, run_err = shell.execute(temp_path)
-        if not ok then
-            print("temp.lua error: " .. tostring(run_err))
-        end
-    end):detach()
+local function run_temp()
+    if not fs.exists(temp_path) then return end
+    local ok, run_err = shell.execute(temp_path)
+    if not ok then
+        print("temp.lua error: " .. tostring(run_err))
+    end
 end
+
+local function pause_or_exit(seconds)
+    local deadline = computer.uptime() + seconds
+    while true do
+        local remaining = deadline - computer.uptime()
+        if remaining <= 0 then return false end
+        local name = event.pull(remaining)
+        if name == "key_down" then
+            return true
+        end
+    end
+end
+
+print('Press any key to stop the update loop and return to the shell.')
 while true do
     print('CHECKING SOURCE CONTROL ...')
+    run_temp()
     fetch_current_version()
     print(get_current_version())
     print(read_temp_version())
@@ -110,5 +124,8 @@ while true do
     else
         print('UP TO DATE')
     end
-    os.sleep(3)
+    if pause_or_exit(3) then
+        print('Update loop stopped.')
+        break
+    end
 end
