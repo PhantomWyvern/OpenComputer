@@ -1,4 +1,4 @@
---1.0.1
+--1.0.2
 local component = require("component")
 --for address, kind in component.list("induction_matrix") do
     --print("found: ", address, kind)
@@ -14,6 +14,7 @@ for address in component.list("induction_matrix") do
     output = component.invoke(address, "getOutput")
     cap = component.invoke(address, "getTransferCap")
 end
+
 function formatEnergy(energy)
     local suffixes = {"", "K", "M", "G", "T", "P", "E"}
     local suffixIndex = 1
@@ -29,7 +30,7 @@ function formatEnergy(energy)
     return formatted .. suffixes[suffixIndex] .. "J"
 end
 
-print("Stored: ", foramtEnergy(stored))
+print("Stored: ", formatEnergy(stored))
 print("Maximum: ", formatEnergy(maximum))
 --print("Input: ", formatEnergy(input))
 --print("Output: ", formatEnergy(output))
