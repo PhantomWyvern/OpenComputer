@@ -1,5 +1,7 @@
---1.0.4
+--1.0.5
 local component = require("component")
+
+local PORT = 42
 --for address, kind in component.list("induction_matrix") do
     --print("found: ", address, kind)
     --for name in pairs(componnet.methods(address)) do
@@ -44,19 +46,61 @@ function formatTime(seconds)
     return string.format("%dd:%dh:%dm:%ds", days, hours, minutes, secs)
 end
 
-print("Stored: ", formatEnergy(stored))
-print("Maximum: ", formatEnergy(maximum))
---print("Input: ", formatEnergy(input))
---print("Output: ", formatEnergy(output))
-print("Transfer Cap: ", formatEnergy(cap))
+local stored_text = formatEnergy(stored)
+local maximum_text = formatEnergy(maximum)
+local input_text = formatEnergy(input)
+local output_text = formatEnergy(output)
+local cap_text = formatEnergy(cap)
+local percentage = maximum > 0 and (stored / maximum) * 100 or 0
+local percentage_text = string.format("%.2f", percentage)
+local time_text = "N/A"
 
 if maximum > 0 then
-    print("percentage: ", string.format("%.2f", (stored / maximum) * 100) .. "%")
-    space_left = (maximum - stored)
-    profit = (input - output)
+    local space_left = maximum - stored
+    local profit = input - output
     if profit > 0 then
-        print("Time to full: ", formatTime((space_left / profit) / 20))
+        time_text = "Full in " .. formatTime((space_left / profit) / 20)
     else
-        print("Time to empty: ", formatTime((stored / math.abs(profit)) / 20))
+        time_text = "Empty in " .. formatTime((stored / math.abs(profit)) / 20)
+    end
+end
+
+print("Stored: ", stored_text)
+print("Maximum: ", maximum_text)
+print("Input: ", input_text .. "/t")
+print("Output: ", output_text .. "/t")
+print("Transfer Cap: ", cap_text)
+if maximum > 0 then
+    print("percentage: ", percentage_text .. "%")
+    print(time_text)
+end
+
+local ok, serialization = pcall(require, "serialization")
+if ok then
+    local modem
+    for address in component.list("modem") do
+        local candidate = component.proxy(address)
+        if candidate and candidate.isWireless() then
+            modem = candidate
+            break
+        end
+    end
+    if modem then
+        pcall(function()
+            if modem.getStrength() == 0 then
+                modem.setStrength(400)
+            end
+        end)
+        modem.broadcast(PORT, serialization.serialize({
+            stored = stored_text,
+            maximum = maximum_text,
+            cap = cap_text,
+            percentage = percentage_text,
+            input = input_text .. "/t",
+            output = output_text .. "/t",
+            input_rate = formatEnergy(input * 20) .. "/s",
+            output_rate = formatEnergy(output * 20) .. "/s",
+            time = time_text,
+        }))
     end
 end
