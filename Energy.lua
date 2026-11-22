@@ -1,4 +1,4 @@
---1.0.3
+--1.0.4
 local component = require("component")
 --for address, kind in component.list("induction_matrix") do
     --print("found: ", address, kind)
@@ -31,19 +31,17 @@ function formatEnergy(energy)
 end
 
 function formatTime(seconds)
-    local suffixes = {"s", "m", "h", "d", "w"}
-    local divisors = {60, 60, 24, 7}
-    local suffixIndex = 1
-    if seconds <= 1 then return "0s" end
-    while divisors[suffixIndex] and seconds >= divisors[suffixIndex] do
-        seconds = seconds / divisors[suffixIndex]
-        suffixIndex = suffixIndex + 1
+    if seconds ~= seconds or seconds == math.huge or seconds == -math.huge then
+        return "infinite"
     end
-    local formatted = string.format("%.1f", seconds)
-    if string.sub(formatted, -2) == ".0" then
-        formatted = string.sub(formatted, 1, -3)
-    end
-    return formatted .. suffixes[suffixIndex]
+    if seconds > 604800 then return "> 1 week" end
+    if seconds < 0 then seconds = 0 end
+    local total = math.floor(seconds)
+    local days = math.floor(total / 86400)
+    local hours = math.floor((total % 86400) / 3600)
+    local minutes = math.floor((total % 3600) / 60)
+    local secs = math.floor(total % 60)
+    return string.format("%dd:%dh:%dm:%ds", days, hours, minutes, secs)
 end
 
 print("Stored: ", formatEnergy(stored))
