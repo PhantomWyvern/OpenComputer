@@ -1,4 +1,4 @@
---1.0.0
+--1.0.1
 local component = require("component")
 local event = require("event")
 local term = require("term")
@@ -24,7 +24,6 @@ modem.open(PORT)
 
 local function draw(data)
     term.clear()
-    term.setCursorPos(1, 1)
     print("== ENERGY MONITOR ==")
     print("Stored: " .. tostring(data.stored) .. " / " .. tostring(data.maximum))
     print("Charge: " .. tostring(data.percentage) .. "%")
@@ -37,7 +36,6 @@ local function draw(data)
 end
 
 term.clear()
-term.setCursorPos(1, 1)
 print("Waiting for energy data on port " .. PORT .. "...")
 print("Press any key/touch to exit.")
 
@@ -54,5 +52,4 @@ while true do
 end
 
 term.clear()
-term.setCursorPos(1, 1)
 print("Energy monitor stopped.")
